@@ -46,7 +46,7 @@ public class LoginController {
                 errorLabel.setText("Неверный логин или пароль");
             }
         } catch (Exception e) {
-            errorLabel.setText("Ошибка подключения к базе данных");
+            errorLabel.setText(e.getMessage());
         }
     }
 

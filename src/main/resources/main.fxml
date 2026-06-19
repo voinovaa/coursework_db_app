@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.MainController"
+      alignment="CENTER"
+      spacing="10"
+      style="-fx-padding: 40;">
+
+    <Label text="Главное меню" style="-fx-font-size: 20;"/>
+
+    <Button text="Поставщики" onAction="#handleSuppliers" maxWidth="250"/>
+    <Button text="Детали" onAction="#handleParts" maxWidth="250"/>
+    <Button text="Поставки" onAction="#handleDeliveries" maxWidth="250"/>
+    <Button text="Изменения цен" onAction="#handlePriceChanges" maxWidth="250"/>
+    <Button text="Пользователи" onAction="#handleUsers" maxWidth="250"/>
+    <Button text="Выйти" onAction="#handleLogout" maxWidth="250"/>
+
+</VBox>
