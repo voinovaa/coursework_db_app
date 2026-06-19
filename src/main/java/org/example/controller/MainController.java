@@ -30,8 +30,15 @@ public class MainController {
     }
 
     @FXML
-    private void handleParts() {}
-
+    private void handleParts() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/parts.fxml"));
+            Stage stage = (Stage) suppliersButton.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
     @FXML
     private void handleDeliveries() {}
 
