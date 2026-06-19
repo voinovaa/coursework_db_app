@@ -32,16 +32,22 @@ public class LoginController {
         try {
             Connection conn = DatabaseConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT user_id FROM users WHERE login = ? AND password = ?"
+                    "SELECT u.user_id, r.name FROM users u " +
+                            "JOIN user_roles ur ON u.user_id = ur.user_id " +
+                            "JOIN roles r ON ur.role_id = r.role_id " +
+                            "WHERE u.login = ? AND u.password = ?"
             );
             stmt.setString(1, login);
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
+                String roleName = rs.getString("name");
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
                 Stage stage = (Stage) loginField.getScene().getWindow();
                 stage.setScene(new Scene(loader.load()));
+                MainController controller = loader.getController();
+                controller.setRole(roleName);
             } else {
                 errorLabel.setText("Неверный логин или пароль");
             }

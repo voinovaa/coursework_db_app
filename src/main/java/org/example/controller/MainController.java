@@ -3,37 +3,35 @@ package org.example.controller;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
-import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import javafx.stage.Stage;
 
 public class MainController {
 
     @FXML private Button suppliersButton;
+    @FXML private Button usersButton;
 
-    @FXML
-    private void handleSuppliers() {
-
+    public void setRole(String roleName) {
+        if (!roleName.equals("Администратор")) {
+            usersButton.setVisible(false);
+            usersButton.setManaged(false);
+        }
     }
 
     @FXML
-    private void handleParts() {
-
-    }
+    private void handleSuppliers() {}
 
     @FXML
-    private void handleDeliveries() {
-
-    }
+    private void handleParts() {}
 
     @FXML
-    private void handlePriceChanges() {
-
-    }
+    private void handleDeliveries() {}
 
     @FXML
-    private void handleUsers() {
+    private void handlePriceChanges() {}
 
-    }
+    @FXML
+    private void handleUsers() {}
 
     @FXML
     private void handleLogout() {

@@ -11,6 +11,7 @@ import org.example.database.DatabaseConnection;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.regex.Pattern;
 
 public class RegisterController {
@@ -46,19 +47,38 @@ public class RegisterController {
 
         try {
             Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO users (login, password) VALUES (?, ?)"
+
+            ResultSet countRs = conn.createStatement().executeQuery("SELECT COUNT(*) FROM users");
+            countRs.next();
+            int userCount = countRs.getInt(1);
+
+            PreparedStatement insertUser = conn.prepareStatement(
+                    "INSERT INTO users (login, password) VALUES (?, ?)",
+                    PreparedStatement.RETURN_GENERATED_KEYS
             );
-            stmt.setString(1, login);
-            stmt.setString(2, password);
-            stmt.executeUpdate();
+            insertUser.setString(1, login);
+            insertUser.setString(2, password);
+            insertUser.executeUpdate();
+
+            ResultSet generatedKeys = insertUser.getGeneratedKeys();
+            generatedKeys.next();
+            int newUserId = generatedKeys.getInt(1);
+
+            int roleId = (userCount == 0) ? 1 : 2;
+
+            PreparedStatement insertRole = conn.prepareStatement(
+                    "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)"
+            );
+            insertRole.setInt(1, newUserId);
+            insertRole.setInt(2, roleId);
+            insertRole.executeUpdate();
 
             handleBack();
         } catch (Exception e) {
             if (e.getMessage().contains("Duplicate")) {
                 errorLabel.setText("Пользователь с таким логином уже существует");
             } else {
-                errorLabel.setText("Ошибка при регистрации");
+                errorLabel.setText(e.getMessage());
             }
         }
     }
