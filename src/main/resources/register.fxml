@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.RegisterController"
+      alignment="CENTER"
+      spacing="10"
+      style="-fx-padding: 40;">
+
+    <Label text="Регистрация" style="-fx-font-size: 20;"/>
+
+    <TextField fx:id="loginField" promptText="Логин" maxWidth="250"/>
+    <PasswordField fx:id="passwordField" promptText="Пароль" maxWidth="250"/>
+    <PasswordField fx:id="confirmPasswordField" promptText="Подтвердите пароль" maxWidth="250"/>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <Button text="Зарегистрироваться" onAction="#handleRegister" maxWidth="250"/>
+    <Button text="Назад" onAction="#handleBack" maxWidth="250"/>
+
+</VBox>
