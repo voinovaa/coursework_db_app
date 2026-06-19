@@ -11,7 +11,7 @@
 
     <Label text="Главное меню" style="-fx-font-size: 20;"/>
 
-    <Button text="Поставщики" onAction="#handleSuppliers" maxWidth="250"/>
+    <Button fx:id="suppliersButton" text="Поставщики" onAction="#handleSuppliers" maxWidth="250"/>
     <Button text="Детали" onAction="#handleParts" maxWidth="250"/>
     <Button text="Поставки" onAction="#handleDeliveries" maxWidth="250"/>
     <Button text="Изменения цен" onAction="#handlePriceChanges" maxWidth="250"/>
