@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.ProfileController"
+      alignment="CENTER"
+      spacing="10"
+      style="-fx-padding: 40;">
+
+    <Label text="Мой профиль" style="-fx-font-size: 20;"/>
+
+    <Label fx:id="loginLabel" style="-fx-font-size: 14;"/>
+
+    <PasswordField fx:id="newPasswordField" promptText="Новый пароль" maxWidth="250"/>
+    <PasswordField fx:id="confirmPasswordField" promptText="Подтвердите пароль" maxWidth="250"/>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <Button text="Сохранить" onAction="#handleSave" maxWidth="250"/>
+    <Button text="Назад" onAction="#handleBack" maxWidth="250"/>
+
+</VBox>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.DeliveryPartsController"
+      spacing="10"
+      style="-fx-padding: 20;">
+
+    <Label fx:id="titleLabel" text="Состав поставки" style="-fx-font-size: 20;"/>
+
+    <TableView fx:id="partsTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="partNameColumn" text="Деталь" prefWidth="250"/>
+            <TableColumn fx:id="quantityColumn" text="Кол-во" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <ComboBox fx:id="partCombo" promptText="Деталь" prefWidth="250"/>
+        <TextField fx:id="quantityField" promptText="Кол-во" prefWidth="100"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <HBox spacing="10">
+        <Button text="Добавить" onAction="#handleAdd"/>
+        <Button text="Удалить" onAction="#handleDelete"/>
+        <Button text="Назад" onAction="#handleBack"/>
+    </HBox>
+
+</VBox>

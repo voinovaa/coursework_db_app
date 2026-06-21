@@ -16,6 +16,7 @@
     <Button text="Поставки" onAction="#handleDeliveries" maxWidth="250"/>
     <Button text="Изменения цен" onAction="#handlePriceChanges" maxWidth="250"/>
     <Button fx:id="usersButton" text="Пользователи" onAction="#handleUsers" maxWidth="250"/>
+    <Button text="Мой профиль" onAction="#handleProfile" maxWidth="250"/>
     <Button text="Выйти" onAction="#handleLogout" maxWidth="250"/>
 
 </VBox>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.PriceChangesController"
+      spacing="10"
+      style="-fx-padding: 20;">
+
+    <Label text="Изменения цен" style="-fx-font-size: 20;"/>
+
+    <TableView fx:id="priceChangesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="partColumn" text="Деталь" prefWidth="200"/>
+            <TableColumn fx:id="supplierColumn" text="Поставщик" prefWidth="150"/>
+            <TableColumn fx:id="dateColumn" text="Дата" prefWidth="100"/>
+            <TableColumn fx:id="valueColumn" text="Цена" prefWidth="100"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <ComboBox fx:id="partCombo" promptText="Деталь" prefWidth="200"/>
+        <ComboBox fx:id="supplierCombo" promptText="Поставщик" prefWidth="150"/>
+        <DatePicker fx:id="datePicker" prefWidth="130"/>
+        <TextField fx:id="valueField" promptText="Цена" prefWidth="100"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <HBox spacing="10">
+        <Button text="Добавить" onAction="#handleAdd"/>
+        <Button text="Удалить" onAction="#handleDelete"/>
+        <Button text="Назад" onAction="#handleBack"/>
+    </HBox>
+
+</VBox>

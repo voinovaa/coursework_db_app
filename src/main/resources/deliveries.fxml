@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.DeliveriesController"
+      spacing="10"
+      style="-fx-padding: 20;">
+
+    <Label text="Поставки" style="-fx-font-size: 20;"/>
+
+    <TableView fx:id="deliveriesTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="supplierColumn" text="Поставщик" prefWidth="150"/>
+            <TableColumn fx:id="dateColumn" text="Дата" prefWidth="100"/>
+            <TableColumn fx:id="quantityColumn" text="Кол-во" prefWidth="80"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <ComboBox fx:id="supplierCombo" promptText="Поставщик" prefWidth="200"/>
+        <DatePicker fx:id="datePicker" prefWidth="150"/>
+        <TextField fx:id="quantityField" promptText="Кол-во" prefWidth="80"/>
+    </HBox>
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <HBox spacing="10">
+        <Button text="Добавить поставку" onAction="#handleAdd"/>
+        <Button text="Удалить поставку" onAction="#handleDelete"/>
+        <Button text="Состав поставки" onAction="#handleViewParts"/>
+        <Button text="Назад" onAction="#handleBack"/>
+    </HBox>
+
+</VBox>

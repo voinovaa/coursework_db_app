@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.example.controller.UsersController"
+      spacing="10"
+      style="-fx-padding: 20;">
+
+    <Label text="Пользователи" style="-fx-font-size: 20;"/>
+
+    <TableView fx:id="usersTable" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="loginColumn" text="Логин" prefWidth="150"/>
+            <TableColumn fx:id="roleColumn" text="Роли" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+    <HBox spacing="10">
+        <ComboBox fx:id="roleCombo" promptText="Роль" prefWidth="150"/>
+        <Button text="Добавить роль" onAction="#handleAddRole"/>
+        <Button text="Убрать роль" onAction="#handleRemoveRole"/>
+    </HBox>
+
+
+    <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>
+
+    <HBox spacing="10">
+        <Button text="Назад" onAction="#handleBack"/>
+    </HBox>
+
+</VBox>

@@ -42,12 +42,14 @@ public class LoginController {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
+                int userId = rs.getInt("user_id");
                 String roleName = rs.getString("name");
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
                 Stage stage = (Stage) loginField.getScene().getWindow();
                 stage.setScene(new Scene(loader.load()));
                 MainController controller = loader.getController();
                 controller.setRole(roleName);
+                controller.setUser(userId, login);
             } else {
                 errorLabel.setText("Неверный логин или пароль");
             }
