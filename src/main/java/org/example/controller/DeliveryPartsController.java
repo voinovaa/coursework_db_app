@@ -77,7 +77,8 @@ public class DeliveryPartsController {
                 partsList.add(new Part(
                         rs.getInt("part_id"),
                         rs.getString("name"),
-                        rs.getString("article")
+                        rs.getString("article"),
+                        rs.getBigDecimal("price")
                 ));
             }
             partCombo.setItems(partsList);

@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 
 public class ProfileController {
 
-    @FXML private Label loginLabel;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
     @FXML private Label errorLabel;
@@ -28,7 +27,6 @@ public class ProfileController {
     public void setUser(int userId, String login) {
         this.userId = userId;
         this.login = login;
-        loginLabel.setText("Логин: " + login);
     }
 
     @FXML
@@ -74,7 +72,7 @@ public class ProfileController {
     private void handleBack() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
-            Stage stage = (Stage) loginLabel.getScene().getWindow();
+            Stage stage = (Stage) errorLabel.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());

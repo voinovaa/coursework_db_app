@@ -14,8 +14,8 @@
         <columns>
             <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
             <TableColumn fx:id="supplierColumn" text="Поставщик" prefWidth="150"/>
-            <TableColumn fx:id="dateColumn" text="Дата" prefWidth="100"/>
-            <TableColumn fx:id="quantityColumn" text="Кол-во" prefWidth="80"/>
+            <TableColumn fx:id="dateColumn" text="Дата" prefWidth="150"/>
+            <TableColumn fx:id="quantityColumn" text="Кол-во" prefWidth="150"/>
         </columns>
     </TableView>
 

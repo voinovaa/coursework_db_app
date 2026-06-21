@@ -15,12 +15,14 @@
             <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
             <TableColumn fx:id="nameColumn" text="Название" prefWidth="200"/>
             <TableColumn fx:id="articleColumn" text="Артикул" prefWidth="150"/>
+            <TableColumn fx:id="priceColumn" text="Цена, руб." prefWidth="100"/>
         </columns>
     </TableView>
 
     <HBox spacing="10">
         <TextField fx:id="nameField" promptText="Название" prefWidth="200"/>
         <TextField fx:id="articleField" promptText="Артикул" prefWidth="150"/>
+        <TextField fx:id="priceField" promptText="Цена" prefWidth="100"/>
     </HBox>
 
     <Label fx:id="errorLabel" style="-fx-text-fill: red;"/>

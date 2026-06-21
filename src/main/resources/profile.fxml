@@ -11,8 +11,6 @@
 
     <Label text="Мой профиль" style="-fx-font-size: 20;"/>
 
-    <Label fx:id="loginLabel" style="-fx-font-size: 14;"/>
-
     <PasswordField fx:id="newPasswordField" promptText="Новый пароль" maxWidth="250"/>
     <PasswordField fx:id="confirmPasswordField" promptText="Подтвердите пароль" maxWidth="250"/>
 

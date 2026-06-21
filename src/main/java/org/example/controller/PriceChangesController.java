@@ -43,6 +43,18 @@ public class PriceChangesController {
         dateColumn.setCellValueFactory(new PropertyValueFactory<>("date"));
         valueColumn.setCellValueFactory(new PropertyValueFactory<>("value"));
 
+        valueColumn.setCellFactory(column -> new TableCell<PriceChange, BigDecimal>() {
+            @Override
+            protected void updateItem(BigDecimal item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", item));
+                }
+            }
+        });
+
         partColumn.setCellValueFactory(cellData -> {
             int partId = cellData.getValue().getPartId();
             String name = partsList.stream()
@@ -70,14 +82,19 @@ public class PriceChangesController {
     }
 
     private void setupComboBoxes() {
-        partCombo.setCellFactory(lv -> new ListCell<>() {
+        partCombo.setCellFactory(lv -> new ListCell<Part>() {
             @Override
             protected void updateItem(Part item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : item.getName() + " (" + item.getArticle() + ")");
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.getName() + " (" + item.getArticle() + ") - " +
+                            (item.getPrice() != null ? String.format("%.2f", item.getPrice()) + " руб." : "цена не указана"));
+                }
             }
         });
-        partCombo.setButtonCell(new ListCell<>() {
+        partCombo.setButtonCell(new ListCell<Part>() {
             @Override
             protected void updateItem(Part item, boolean empty) {
                 super.updateItem(item, empty);
@@ -85,14 +102,14 @@ public class PriceChangesController {
             }
         });
 
-        supplierCombo.setCellFactory(lv -> new ListCell<>() {
+        supplierCombo.setCellFactory(lv -> new ListCell<Supplier>() {
             @Override
             protected void updateItem(Supplier item, boolean empty) {
                 super.updateItem(item, empty);
                 setText(empty || item == null ? null : item.getName());
             }
         });
-        supplierCombo.setButtonCell(new ListCell<>() {
+        supplierCombo.setButtonCell(new ListCell<Supplier>() {
             @Override
             protected void updateItem(Supplier item, boolean empty) {
                 super.updateItem(item, empty);
@@ -110,7 +127,8 @@ public class PriceChangesController {
                 partsList.add(new Part(
                         rs.getInt("part_id"),
                         rs.getString("name"),
-                        rs.getString("article")
+                        rs.getString("article"),
+                        rs.getBigDecimal("price")
                 ));
             }
             partCombo.setItems(partsList);
@@ -142,7 +160,7 @@ public class PriceChangesController {
         priceChangesList.clear();
         try {
             Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM price_changes");
+            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM price_changes ORDER BY date DESC");
             while (rs.next()) {
                 priceChangesList.add(new PriceChange(
                         rs.getInt("change_id"),
@@ -172,7 +190,25 @@ public class PriceChangesController {
 
         try {
             BigDecimal value = new BigDecimal(valueText);
+            if (value.compareTo(BigDecimal.ZERO) < 0) {
+                errorLabel.setText("Цена не может быть отрицательной");
+                return;
+            }
+
             Connection conn = DatabaseConnection.getConnection();
+
+            PreparedStatement checkStmt = conn.prepareStatement(
+                    "SELECT * FROM price_changes WHERE part_id = ? AND supplier_id = ? AND date = ?"
+            );
+            checkStmt.setInt(1, part.getPartId());
+            checkStmt.setInt(2, supplier.getSupplierId());
+            checkStmt.setDate(3, java.sql.Date.valueOf(date));
+            ResultSet rs = checkStmt.executeQuery();
+
+            if (rs.next()) {
+                errorLabel.setText("Запись на эту дату уже существует");
+                return;
+            }
 
             PreparedStatement stmt = conn.prepareStatement(
                     "INSERT INTO price_changes (part_id, supplier_id, date, value) VALUES (?, ?, ?, ?)"
@@ -183,12 +219,23 @@ public class PriceChangesController {
             stmt.setBigDecimal(4, value);
             stmt.executeUpdate();
 
+            PreparedStatement updatePartStmt = conn.prepareStatement(
+                    "UPDATE parts SET price = ? WHERE part_id = ?"
+            );
+            updatePartStmt.setBigDecimal(1, value);
+            updatePartStmt.setInt(2, part.getPartId());
+            updatePartStmt.executeUpdate();
+
             clearFields();
             loadPriceChanges();
-            errorLabel.setText("");
+            loadParts();
+            errorLabel.setStyle("-fx-text-fill: green;");
+            errorLabel.setText("Цена успешно обновлена");
         } catch (NumberFormatException e) {
-            errorLabel.setText("Цена должна быть числом");
+            errorLabel.setStyle("-fx-text-fill: red;");
+            errorLabel.setText("Некорректный формат цены");
         } catch (Exception e) {
+            errorLabel.setStyle("-fx-text-fill: red;");
             errorLabel.setText(e.getMessage());
         }
     }
@@ -203,12 +250,37 @@ public class PriceChangesController {
 
         try {
             Connection conn = DatabaseConnection.getConnection();
+
             PreparedStatement stmt = conn.prepareStatement(
                     "DELETE FROM price_changes WHERE change_id = ?"
             );
             stmt.setInt(1, selected.getChangeId());
             stmt.executeUpdate();
+
+            PreparedStatement lastPriceStmt = conn.prepareStatement(
+                    "SELECT value FROM price_changes WHERE part_id = ? ORDER BY date DESC LIMIT 1"
+            );
+            lastPriceStmt.setInt(1, selected.getPartId());
+            ResultSet rs = lastPriceStmt.executeQuery();
+
+            if (rs.next()) {
+                PreparedStatement updatePartStmt = conn.prepareStatement(
+                        "UPDATE parts SET price = ? WHERE part_id = ?"
+                );
+                updatePartStmt.setBigDecimal(1, rs.getBigDecimal("value"));
+                updatePartStmt.setInt(2, selected.getPartId());
+                updatePartStmt.executeUpdate();
+            } else {
+                PreparedStatement updatePartStmt = conn.prepareStatement(
+                        "UPDATE parts SET price = 0.00 WHERE part_id = ?"
+                );
+                updatePartStmt.setInt(1, selected.getPartId());
+                updatePartStmt.executeUpdate();
+            }
+
             loadPriceChanges();
+            loadParts();
+            errorLabel.setText("");
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }
@@ -230,6 +302,7 @@ public class PriceChangesController {
         supplierCombo.setValue(null);
         datePicker.setValue(null);
         valueField.clear();
+        errorLabel.setStyle("-fx-text-fill: red;");
         errorLabel.setText("");
     }
 }
