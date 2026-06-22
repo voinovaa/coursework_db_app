@@ -83,18 +83,6 @@ public class MainController {
         }
     }
 
-    @FXML
-    private void handleProfile() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/profile.fxml"));
-            Stage stage = (Stage) suppliersButton.getScene().getWindow();
-            stage.setScene(new Scene(loader.load()));
-            ProfileController controller = loader.getController();
-            controller.setUser(userId, login);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @FXML
     private void handleLogout() {

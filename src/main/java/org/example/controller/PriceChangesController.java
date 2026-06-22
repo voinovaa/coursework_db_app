@@ -18,6 +18,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PriceChangesController {
 
@@ -36,6 +38,8 @@ public class PriceChangesController {
     private ObservableList<PriceChange> priceChangesList = FXCollections.observableArrayList();
     private ObservableList<Part> partsList = FXCollections.observableArrayList();
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
+    private Map<Integer, String> partNameMap = new HashMap<>();
+    private Map<Integer, String> supplierNameMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -56,22 +60,12 @@ public class PriceChangesController {
         });
 
         partColumn.setCellValueFactory(cellData -> {
-            int partId = cellData.getValue().getPartId();
-            String name = partsList.stream()
-                    .filter(p -> p.getPartId() == partId)
-                    .map(Part::getName)
-                    .findFirst()
-                    .orElse("Неизвестно");
+            String name = partNameMap.getOrDefault(cellData.getValue().getPartId(), "Неизвестно");
             return new javafx.beans.property.SimpleStringProperty(name);
         });
 
         supplierColumn.setCellValueFactory(cellData -> {
-            int supplierId = cellData.getValue().getSupplierId();
-            String name = suppliersList.stream()
-                    .filter(s -> s.getSupplierId() == supplierId)
-                    .map(Supplier::getName)
-                    .findFirst()
-                    .orElse("Неизвестно");
+            String name = supplierNameMap.getOrDefault(cellData.getValue().getSupplierId(), "Неизвестно");
             return new javafx.beans.property.SimpleStringProperty(name);
         });
 
@@ -89,8 +83,7 @@ public class PriceChangesController {
                 if (empty || item == null) {
                     setText(null);
                 } else {
-                    setText(item.getName() + " (" + item.getArticle() + ") - " +
-                            (item.getPrice() != null ? String.format("%.2f", item.getPrice()) + " руб." : "цена не указана"));
+                    setText(item.getName() + " (" + item.getArticle() + ")");
                 }
             }
         });
@@ -120,16 +113,19 @@ public class PriceChangesController {
 
     private void loadParts() {
         partsList.clear();
+        partNameMap.clear();
         try {
             Connection conn = DatabaseConnection.getConnection();
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM parts");
             while (rs.next()) {
+                int id = rs.getInt("part_id");
+                String name = rs.getString("name");
                 partsList.add(new Part(
-                        rs.getInt("part_id"),
-                        rs.getString("name"),
-                        rs.getString("article"),
-                        rs.getBigDecimal("price")
+                        id,
+                        name,
+                        rs.getString("article")
                 ));
+                partNameMap.put(id, name);
             }
             partCombo.setItems(partsList);
         } catch (Exception e) {
@@ -139,16 +135,20 @@ public class PriceChangesController {
 
     private void loadSuppliers() {
         suppliersList.clear();
+        supplierNameMap.clear();
         try {
             Connection conn = DatabaseConnection.getConnection();
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM suppliers");
             while (rs.next()) {
+                int id = rs.getInt("supplier_id");
+                String name = rs.getString("name");
                 suppliersList.add(new Supplier(
-                        rs.getInt("supplier_id"),
-                        rs.getString("name"),
+                        id,
+                        name,
                         rs.getString("address"),
                         rs.getString("phone")
                 ));
+                supplierNameMap.put(id, name);
             }
             supplierCombo.setItems(suppliersList);
         } catch (Exception e) {
@@ -219,12 +219,6 @@ public class PriceChangesController {
             stmt.setBigDecimal(4, value);
             stmt.executeUpdate();
 
-            PreparedStatement updatePartStmt = conn.prepareStatement(
-                    "UPDATE parts SET price = ? WHERE part_id = ?"
-            );
-            updatePartStmt.setBigDecimal(1, value);
-            updatePartStmt.setInt(2, part.getPartId());
-            updatePartStmt.executeUpdate();
 
             clearFields();
             loadPriceChanges();
@@ -243,6 +237,7 @@ public class PriceChangesController {
     @FXML
     private void handleDelete() {
         PriceChange selected = priceChangesTable.getSelectionModel().getSelectedItem();
+
         if (selected == null) {
             errorLabel.setText("Выберите запись");
             return;
@@ -254,34 +249,17 @@ public class PriceChangesController {
             PreparedStatement stmt = conn.prepareStatement(
                     "DELETE FROM price_changes WHERE change_id = ?"
             );
+
             stmt.setInt(1, selected.getChangeId());
             stmt.executeUpdate();
 
-            PreparedStatement lastPriceStmt = conn.prepareStatement(
-                    "SELECT value FROM price_changes WHERE part_id = ? ORDER BY date DESC LIMIT 1"
-            );
-            lastPriceStmt.setInt(1, selected.getPartId());
-            ResultSet rs = lastPriceStmt.executeQuery();
-
-            if (rs.next()) {
-                PreparedStatement updatePartStmt = conn.prepareStatement(
-                        "UPDATE parts SET price = ? WHERE part_id = ?"
-                );
-                updatePartStmt.setBigDecimal(1, rs.getBigDecimal("value"));
-                updatePartStmt.setInt(2, selected.getPartId());
-                updatePartStmt.executeUpdate();
-            } else {
-                PreparedStatement updatePartStmt = conn.prepareStatement(
-                        "UPDATE parts SET price = 0.00 WHERE part_id = ?"
-                );
-                updatePartStmt.setInt(1, selected.getPartId());
-                updatePartStmt.executeUpdate();
-            }
-
             loadPriceChanges();
-            loadParts();
-            errorLabel.setText("");
+
+            errorLabel.setStyle("-fx-text-fill: green;");
+            errorLabel.setText("Запись удалена");
+
         } catch (Exception e) {
+            errorLabel.setStyle("-fx-text-fill: red;");
             errorLabel.setText(e.getMessage());
         }
     }

@@ -8,6 +8,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.database.DatabaseConnection;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -56,8 +57,9 @@ public class RegisterController {
                     "INSERT INTO users (login, password) VALUES (?, ?)",
                     PreparedStatement.RETURN_GENERATED_KEYS
             );
+            String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt());
             insertUser.setString(1, login);
-            insertUser.setString(2, password);
+            insertUser.setString(2, passwordHash);
             insertUser.executeUpdate();
 
             ResultSet generatedKeys = insertUser.getGeneratedKeys();

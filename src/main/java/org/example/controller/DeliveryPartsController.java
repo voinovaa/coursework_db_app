@@ -16,6 +16,8 @@ import org.example.model.Part;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DeliveryPartsController {
 
@@ -30,16 +32,12 @@ public class DeliveryPartsController {
     private Delivery currentDelivery;
     private ObservableList<DeliveryPart> deliveryPartsList = FXCollections.observableArrayList();
     private ObservableList<Part> partsList = FXCollections.observableArrayList();
+    private Map<Integer, String> partNameMap = new HashMap<>();
 
     @FXML
     public void initialize() {
         partNameColumn.setCellValueFactory(cellData -> {
-            int partId = cellData.getValue().getPartId();
-            String name = partsList.stream()
-                    .filter(p -> p.getPartId() == partId)
-                    .map(Part::getName)
-                    .findFirst()
-                    .orElse("Неизвестно");
+            String name = partNameMap.getOrDefault(cellData.getValue().getPartId(), "Неизвестно");
             return new javafx.beans.property.SimpleStringProperty(name);
         });
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
@@ -70,16 +68,19 @@ public class DeliveryPartsController {
 
     private void loadParts() {
         partsList.clear();
+        partNameMap.clear();
         try {
             Connection conn = DatabaseConnection.getConnection();
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM parts");
             while (rs.next()) {
+                int id = rs.getInt("part_id");
+                String name = rs.getString("name");
                 partsList.add(new Part(
-                        rs.getInt("part_id"),
-                        rs.getString("name"),
-                        rs.getString("article"),
-                        rs.getBigDecimal("price")
+                        id,
+                        name,
+                        rs.getString("article")
                 ));
+                partNameMap.put(id, name);
             }
             partCombo.setItems(partsList);
         } catch (Exception e) {
@@ -107,8 +108,6 @@ public class DeliveryPartsController {
                 ));
             }
             partsTable.setItems(deliveryPartsList);
-
-            // Обновляем общее количество в поставке
             updateDeliveryQuantity();
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
@@ -118,9 +117,10 @@ public class DeliveryPartsController {
     private void updateDeliveryQuantity() {
         if (currentDelivery == null) return;
 
-        int totalQuantity = deliveryPartsList.stream()
-                .mapToInt(DeliveryPart::getQuantity)
-                .sum();
+        int totalQuantity = 0;
+        for (DeliveryPart dp : deliveryPartsList) {
+            totalQuantity += dp.getQuantity();
+        }
 
         try {
             Connection conn = DatabaseConnection.getConnection();
@@ -157,7 +157,6 @@ public class DeliveryPartsController {
                 return;
             }
 
-            // Проверяем, есть ли уже такая деталь в поставке
             for (DeliveryPart dp : deliveryPartsList) {
                 if (dp.getPartId() == part.getPartId()) {
                     errorLabel.setText("Эта деталь уже добавлена в поставку");

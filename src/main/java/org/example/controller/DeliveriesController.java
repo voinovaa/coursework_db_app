@@ -1,5 +1,6 @@
 package org.example.controller;
 
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -16,6 +17,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DeliveriesController {
 
@@ -32,6 +35,7 @@ public class DeliveriesController {
 
     private ObservableList<Delivery> deliveriesList = FXCollections.observableArrayList();
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
+    private Map<Integer, String> supplierNameMap = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -40,13 +44,8 @@ public class DeliveriesController {
         quantityColumn.setCellValueFactory(new PropertyValueFactory<>("quantity"));
 
         supplierColumn.setCellValueFactory(cellData -> {
-            int supplierId = cellData.getValue().getSupplierId();
-            String name = suppliersList.stream()
-                    .filter(s -> s.getSupplierId() == supplierId)
-                    .map(Supplier::getName)
-                    .findFirst()
-                    .orElse("Неизвестно");
-            return new javafx.beans.property.SimpleStringProperty(name);
+            String name = supplierNameMap.getOrDefault(cellData.getValue().getSupplierId(), "Неизвестно");
+            return new SimpleStringProperty(name);
         });
 
         supplierCombo.setCellFactory(lv -> new ListCell<>() {
@@ -70,16 +69,15 @@ public class DeliveriesController {
 
     private void loadSuppliers() {
         suppliersList.clear();
+        supplierNameMap.clear();
         try {
             Connection conn = DatabaseConnection.getConnection();
             ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM suppliers");
             while (rs.next()) {
-                suppliersList.add(new Supplier(
-                        rs.getInt("supplier_id"),
-                        rs.getString("name"),
-                        rs.getString("address"),
-                        rs.getString("phone")
-                ));
+                int id = rs.getInt("supplier_id");
+                String name = rs.getString("name");
+                suppliersList.add(new Supplier(id, name, rs.getString("address"), rs.getString("phone")));
+                supplierNameMap.put(id, name);
             }
             supplierCombo.setItems(suppliersList);
         } catch (Exception e) {

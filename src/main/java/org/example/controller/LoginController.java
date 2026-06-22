@@ -8,6 +8,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.example.database.DatabaseConnection;
+import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -32,24 +33,36 @@ public class LoginController {
         try {
             Connection conn = DatabaseConnection.getConnection();
             PreparedStatement stmt = conn.prepareStatement(
-                    "SELECT u.user_id, r.name FROM users u " +
+                    "SELECT u.user_id, u.password, r.name " +
+                            "FROM users u " +
                             "JOIN user_roles ur ON u.user_id = ur.user_id " +
                             "JOIN roles r ON ur.role_id = r.role_id " +
-                            "WHERE u.login = ? AND u.password = ?"
+                            "WHERE u.login = ?"
             );
             stmt.setString(1, login);
-            stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                int userId = rs.getInt("user_id");
-                String roleName = rs.getString("name");
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
-                Stage stage = (Stage) loginField.getScene().getWindow();
-                stage.setScene(new Scene(loader.load()));
-                MainController controller = loader.getController();
-                controller.setRole(roleName);
-                controller.setUser(userId, login);
+
+                String storedHash = rs.getString("password");
+
+                if (BCrypt.checkpw(password, storedHash)) {
+
+                    int userId = rs.getInt("user_id");
+                    String roleName = rs.getString("name");
+
+                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
+                    Stage stage = (Stage) loginField.getScene().getWindow();
+                    stage.setScene(new Scene(loader.load()));
+
+                    MainController controller = loader.getController();
+                    controller.setRole(roleName);
+                    controller.setUser(userId, login);
+
+                } else {
+                    errorLabel.setText("Неверный логин или пароль");
+                }
+
             } else {
                 errorLabel.setText("Неверный логин или пароль");
             }
@@ -66,6 +79,21 @@ public class LoginController {
             stage.setScene(new Scene(loader.load()));
         } catch (Exception e) {
             errorLabel.setText("Ошибка открытия формы регистрации");
+        }
+    }
+
+    @FXML
+    private void handleChangePassword() {
+        try {
+            FXMLLoader loader = new FXMLLoader(
+                    getClass().getResource("/change_password.fxml")
+            );
+
+            Stage stage = (Stage) loginField.getScene().getWindow();
+            stage.setScene(new Scene(loader.load()));
+
+        } catch (Exception e) {
+            errorLabel.setText("Ошибка открытия формы");
         }
     }
 }

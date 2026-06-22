@@ -18,5 +18,6 @@
 
     <Button text="Войти" onAction="#handleLogin" maxWidth="250"/>
     <Button text="Регистрация" onAction="#handleRegister" maxWidth="250"/>
+    <Button text="Смена пароля" onAction="#handleChangePassword" maxWidth="250"/>
 
 </VBox>
