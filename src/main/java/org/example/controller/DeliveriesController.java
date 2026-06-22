@@ -9,13 +9,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.database.DatabaseConnection;
 import org.example.model.Delivery;
 import org.example.model.Supplier;
+import org.example.model.interfaces.IDeliveryDAO;
+import org.example.model.DAO.DeliveryDAO;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,6 +34,7 @@ public class DeliveriesController {
     private ObservableList<Delivery> deliveriesList = FXCollections.observableArrayList();
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
     private Map<Integer, String> supplierNameMap = new HashMap<>();
+    private final IDeliveryDAO deliveryDAO = new DeliveryDAO();
 
     @FXML
     public void initialize() {
@@ -70,39 +69,16 @@ public class DeliveriesController {
     private void loadSuppliers() {
         suppliersList.clear();
         supplierNameMap.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM suppliers");
-            while (rs.next()) {
-                int id = rs.getInt("supplier_id");
-                String name = rs.getString("name");
-                suppliersList.add(new Supplier(id, name, rs.getString("address"), rs.getString("phone")));
-                supplierNameMap.put(id, name);
-            }
-            supplierCombo.setItems(suppliersList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
+        for (Supplier supplier : deliveryDAO.getAllSuppliers()) {
+            suppliersList.add(supplier);
+            supplierNameMap.put(supplier.getSupplierId(), supplier.getName());
         }
+        supplierCombo.setItems(suppliersList);
     }
 
     private void loadDeliveries() {
-        deliveriesList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM deliveries");
-            while (rs.next()) {
-                deliveriesList.add(new Delivery(
-                        rs.getInt("delivery_id"),
-                        rs.getInt("user_id"),
-                        rs.getInt("supplier_id"),
-                        rs.getDate("date").toLocalDate(),
-                        rs.getInt("quantity")
-                ));
-            }
-            deliveriesTable.setItems(deliveriesList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+        deliveriesList.setAll(deliveryDAO.getAllDeliveries());
+        deliveriesTable.setItems(deliveriesList);
     }
 
     @FXML
@@ -118,18 +94,7 @@ public class DeliveriesController {
 
         try {
             int quantity = Integer.parseInt(quantityText);
-            Connection conn = DatabaseConnection.getConnection();
-
-            int userId = currentUserId;
-
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO deliveries (user_id, supplier_id, date, quantity) VALUES (?, ?, ?, ?)"
-            );
-            stmt.setInt(1, userId);
-            stmt.setInt(2, supplier.getSupplierId());
-            stmt.setDate(3, java.sql.Date.valueOf(date));
-            stmt.setInt(4, quantity);
-            stmt.executeUpdate();
+            deliveryDAO.addDelivery(currentUserId, supplier.getSupplierId(), date, quantity);
             quantityField.clear();
             datePicker.setValue(null);
             supplierCombo.setValue(null);
@@ -151,12 +116,8 @@ public class DeliveriesController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "DELETE FROM deliveries WHERE delivery_id = ?"
-            );
-            stmt.setInt(1, selected.getDeliveryId());
-            stmt.executeUpdate();
+            deliveryDAO.deleteDelivery(selected.getDeliveryId());
+            errorLabel.setText("");
             loadDeliveries();
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());

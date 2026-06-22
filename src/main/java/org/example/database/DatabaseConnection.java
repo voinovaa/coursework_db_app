@@ -6,18 +6,34 @@ import java.sql.SQLException;
 
 public class DatabaseConnection {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/auto_parts_db";
+    private static DatabaseConnection instance;
+    private Connection connection;
+
+    private static final String URL =
+            "jdbc:mysql://localhost:3306/auto_parts_db";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 
-    private static Connection connection;
+    private DatabaseConnection() throws SQLException {
+        connection = DriverManager.getConnection(URL, USER, PASSWORD);
+    }
 
-    private DatabaseConnection() {}
+    public static synchronized DatabaseConnection getInstance()
+            throws SQLException {
 
-    public static Connection getConnection() throws SQLException {
+        if (instance == null) {
+            instance = new DatabaseConnection();
+        }
+
+        return instance;
+    }
+
+    public Connection getConnection() throws SQLException {
+
         if (connection == null || connection.isClosed()) {
             connection = DriverManager.getConnection(URL, USER, PASSWORD);
         }
+
         return connection;
     }
 }

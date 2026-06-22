@@ -8,12 +8,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.database.DatabaseConnection;
 import org.example.model.Supplier;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import org.example.model.interfaces.ISupplierDAO;
+import org.example.model.DAO.SupplierDAO;
 
 public class SuppliersController {
 
@@ -28,6 +25,7 @@ public class SuppliersController {
     @FXML private Label errorLabel;
 
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
+    private final ISupplierDAO supplierDAO = new SupplierDAO();
 
     @FXML
     public void initialize() {
@@ -48,22 +46,9 @@ public class SuppliersController {
     }
 
     private void loadSuppliers() {
-        suppliersList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM suppliers");
-            while (rs.next()) {
-                suppliersList.add(new Supplier(
-                        rs.getInt("supplier_id"),
-                        rs.getString("name"),
-                        rs.getString("address"),
-                        rs.getString("phone")
-                ));
-            }
-            suppliersTable.setItems(suppliersList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+
+        suppliersList.setAll(supplierDAO.getAllSuppliers());
+        suppliersTable.setItems(suppliersList);
     }
 
     @FXML
@@ -78,14 +63,7 @@ public class SuppliersController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO suppliers (name, address, phone) VALUES (?, ?, ?)"
-            );
-            stmt.setString(1, name);
-            stmt.setString(2, address);
-            stmt.setString(3, phone);
-            stmt.executeUpdate();
+            supplierDAO.addSupplier(name, address, phone);
             clearFields();
             loadSuppliers();
         } catch (Exception e) {
@@ -111,15 +89,7 @@ public class SuppliersController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE suppliers SET name = ?, address = ?, phone = ? WHERE supplier_id = ?"
-            );
-            stmt.setString(1, name);
-            stmt.setString(2, address);
-            stmt.setString(3, phone);
-            stmt.setInt(4, selected.getSupplierId());
-            stmt.executeUpdate();
+            supplierDAO.updateSupplier(selected.getSupplierId(), name, address, phone);
             clearFields();
             loadSuppliers();
         } catch (Exception e) {
@@ -136,12 +106,7 @@ public class SuppliersController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "DELETE FROM suppliers WHERE supplier_id = ?"
-            );
-            stmt.setInt(1, selected.getSupplierId());
-            stmt.executeUpdate();
+            supplierDAO.deleteSupplier(selected.getSupplierId());
             clearFields();
             loadSuppliers();
         } catch (Exception e) {

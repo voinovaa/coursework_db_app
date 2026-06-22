@@ -8,15 +8,14 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.database.DatabaseConnection;
 import org.example.model.Part;
 import org.example.model.PriceChange;
 import org.example.model.Supplier;
+import javafx.beans.property.SimpleStringProperty;
 
+import org.example.model.interfaces.IPriceChangeDAO;
+import org.example.model.DAO.PriceChangeDAO;
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -40,6 +39,7 @@ public class PriceChangesController {
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
     private Map<Integer, String> partNameMap = new HashMap<>();
     private Map<Integer, String> supplierNameMap = new HashMap<>();
+    private final IPriceChangeDAO priceChangeDAO = new PriceChangeDAO();
 
     @FXML
     public void initialize() {
@@ -61,12 +61,12 @@ public class PriceChangesController {
 
         partColumn.setCellValueFactory(cellData -> {
             String name = partNameMap.getOrDefault(cellData.getValue().getPartId(), "Неизвестно");
-            return new javafx.beans.property.SimpleStringProperty(name);
+            return new SimpleStringProperty(name);
         });
 
         supplierColumn.setCellValueFactory(cellData -> {
             String name = supplierNameMap.getOrDefault(cellData.getValue().getSupplierId(), "Неизвестно");
-            return new javafx.beans.property.SimpleStringProperty(name);
+            return new SimpleStringProperty(name);
         });
 
         setupComboBoxes();
@@ -114,66 +114,26 @@ public class PriceChangesController {
     private void loadParts() {
         partsList.clear();
         partNameMap.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM parts");
-            while (rs.next()) {
-                int id = rs.getInt("part_id");
-                String name = rs.getString("name");
-                partsList.add(new Part(
-                        id,
-                        name,
-                        rs.getString("article")
-                ));
-                partNameMap.put(id, name);
-            }
-            partCombo.setItems(partsList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
+        for (Part part : priceChangeDAO.getAllParts()) {
+            partsList.add(part);
+            partNameMap.put(part.getPartId(), part.getName());
         }
+        partCombo.setItems(partsList);
     }
 
     private void loadSuppliers() {
         suppliersList.clear();
         supplierNameMap.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM suppliers");
-            while (rs.next()) {
-                int id = rs.getInt("supplier_id");
-                String name = rs.getString("name");
-                suppliersList.add(new Supplier(
-                        id,
-                        name,
-                        rs.getString("address"),
-                        rs.getString("phone")
-                ));
-                supplierNameMap.put(id, name);
-            }
-            supplierCombo.setItems(suppliersList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
+        for (Supplier supplier : priceChangeDAO.getAllSuppliers()) {
+            suppliersList.add(supplier);
+            supplierNameMap.put(supplier.getSupplierId(), supplier.getName());
         }
+        supplierCombo.setItems(suppliersList);
     }
 
     private void loadPriceChanges() {
-        priceChangesList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM price_changes ORDER BY date DESC");
-            while (rs.next()) {
-                priceChangesList.add(new PriceChange(
-                        rs.getInt("change_id"),
-                        rs.getInt("part_id"),
-                        rs.getInt("supplier_id"),
-                        rs.getDate("date").toLocalDate(),
-                        rs.getBigDecimal("value")
-                ));
-            }
-            priceChangesTable.setItems(priceChangesList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+        priceChangesList.setAll(priceChangeDAO.getAllPriceChanges());
+        priceChangesTable.setItems(priceChangesList);
     }
 
     @FXML
@@ -194,35 +154,13 @@ public class PriceChangesController {
                 errorLabel.setText("Цена не может быть отрицательной");
                 return;
             }
-
-            Connection conn = DatabaseConnection.getConnection();
-
-            PreparedStatement checkStmt = conn.prepareStatement(
-                    "SELECT * FROM price_changes WHERE part_id = ? AND supplier_id = ? AND date = ?"
-            );
-            checkStmt.setInt(1, part.getPartId());
-            checkStmt.setInt(2, supplier.getSupplierId());
-            checkStmt.setDate(3, java.sql.Date.valueOf(date));
-            ResultSet rs = checkStmt.executeQuery();
-
-            if (rs.next()) {
+            if (priceChangeDAO.priceChangeExists(part.getPartId(), supplier.getSupplierId(), date)) {
                 errorLabel.setText("Запись на эту дату уже существует");
                 return;
             }
-
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO price_changes (part_id, supplier_id, date, value) VALUES (?, ?, ?, ?)"
-            );
-            stmt.setInt(1, part.getPartId());
-            stmt.setInt(2, supplier.getSupplierId());
-            stmt.setDate(3, java.sql.Date.valueOf(date));
-            stmt.setBigDecimal(4, value);
-            stmt.executeUpdate();
-
-
+            priceChangeDAO.addPriceChange(part.getPartId(), supplier.getSupplierId(), date, value);
             clearFields();
             loadPriceChanges();
-            loadParts();
             errorLabel.setStyle("-fx-text-fill: green;");
             errorLabel.setText("Цена успешно обновлена");
         } catch (NumberFormatException e) {
@@ -244,20 +182,10 @@ public class PriceChangesController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-
-            PreparedStatement stmt = conn.prepareStatement(
-                    "DELETE FROM price_changes WHERE change_id = ?"
-            );
-
-            stmt.setInt(1, selected.getChangeId());
-            stmt.executeUpdate();
-
+            priceChangeDAO.deletePriceChange(selected.getChangeId());
             loadPriceChanges();
-
             errorLabel.setStyle("-fx-text-fill: green;");
             errorLabel.setText("Запись удалена");
-
         } catch (Exception e) {
             errorLabel.setStyle("-fx-text-fill: red;");
             errorLabel.setText(e.getMessage());

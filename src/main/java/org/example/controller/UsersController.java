@@ -8,13 +8,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.database.DatabaseConnection;
 import org.example.model.Role;
 import org.example.model.User;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import javafx.beans.property.SimpleStringProperty;
+import org.example.model.interfaces.IUserDAO;
+import org.example.model.DAO.UserDAO;
+import org.example.model.interfaces.IRoleDAO;
+import org.example.model.DAO.RoleDAO;
 
 public class UsersController {
 
@@ -28,33 +28,22 @@ public class UsersController {
     private ObservableList<User> usersList = FXCollections.observableArrayList();
     private ObservableList<Role> rolesList = FXCollections.observableArrayList();
 
+    private final IUserDAO userDAO = new UserDAO();
+    private final IRoleDAO roleDAO = new RoleDAO();
+
 
     @FXML
     public void initialize() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("userId"));
         loginColumn.setCellValueFactory(new PropertyValueFactory<>("login"));
 
-        roleColumn.setCellValueFactory(cellData -> {
-            int userId = cellData.getValue().getUserId();
-            try {
-                Connection conn = DatabaseConnection.getConnection();
-                PreparedStatement stmt = conn.prepareStatement(
-                        "SELECT r.name FROM roles r " +
-                                "JOIN user_roles ur ON r.role_id = ur.role_id " +
-                                "WHERE ur.user_id = ?"
-                );
-                stmt.setInt(1, userId);
-                ResultSet rs = stmt.executeQuery();
-                StringBuilder roles = new StringBuilder();
-                while (rs.next()) {
-                    if (roles.length() > 0) roles.append(", ");
-                    roles.append(rs.getString("name"));
-                }
-                return new javafx.beans.property.SimpleStringProperty(roles.toString());
-            } catch (Exception e) {
-                return new javafx.beans.property.SimpleStringProperty("Ошибка");
-            }
-        });
+        roleColumn.setCellValueFactory(cellData ->
+                new SimpleStringProperty(
+                        userDAO.getUserRoles(
+                                cellData.getValue().getUserId()
+                        )
+                )
+        );
 
         roleCombo.setCellFactory(lv -> new ListCell<>() {
             @Override
@@ -76,38 +65,17 @@ public class UsersController {
     }
 
     private void loadRoles() {
-        rolesList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM roles");
-            while (rs.next()) {
-                rolesList.add(new Role(
-                        rs.getInt("role_id"),
-                        rs.getString("name")
-                ));
-            }
-            roleCombo.setItems(rolesList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+
+        rolesList.setAll(roleDAO.getAllRoles());
+
+        roleCombo.setItems(rolesList);
     }
 
     private void loadUsers() {
-        usersList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM users");
-            while (rs.next()) {
-                usersList.add(new User(
-                        rs.getInt("user_id"),
-                        rs.getString("login"),
-                        rs.getString("password")
-                ));
-            }
-            usersTable.setItems(usersList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+
+        usersList.setAll(userDAO.getAllUsers());
+
+        usersTable.setItems(usersList);
     }
 
     @FXML
@@ -125,27 +93,15 @@ public class UsersController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
 
-            PreparedStatement checkStmt = conn.prepareStatement(
-                    "SELECT * FROM user_roles WHERE user_id = ? AND role_id = ?"
-            );
-            checkStmt.setInt(1, selected.getUserId());
-            checkStmt.setInt(2, role.getRoleId());
-            ResultSet rs = checkStmt.executeQuery();
-
-            if (rs.next()) {
+            if (userDAO.userHasRole(
+                    selected.getUserId(),
+                    role.getRoleId()
+            )) {
                 errorLabel.setText("У пользователя уже есть эта роль");
                 return;
             }
-
-            PreparedStatement insertStmt = conn.prepareStatement(
-                    "INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)"
-            );
-            insertStmt.setInt(1, selected.getUserId());
-            insertStmt.setInt(2, role.getRoleId());
-            insertStmt.executeUpdate();
-
+            userDAO.addRoleToUser(selected.getUserId(), role.getRoleId());
             errorLabel.setText("");
             loadUsers();
             usersTable.refresh();
@@ -169,26 +125,11 @@ public class UsersController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-
-            PreparedStatement countStmt = conn.prepareStatement(
-                    "SELECT COUNT(*) FROM user_roles WHERE user_id = ?"
-            );
-            countStmt.setInt(1, selected.getUserId());
-            ResultSet countRs = countStmt.executeQuery();
-            countRs.next();
-            if (countRs.getInt(1) <= 1) {
+            if (userDAO.countRoles(selected.getUserId()) <= 1) {
                 errorLabel.setText("У пользователя должна остаться хотя бы одна роль");
                 return;
             }
-
-            PreparedStatement deleteStmt = conn.prepareStatement(
-                    "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?"
-            );
-            deleteStmt.setInt(1, selected.getUserId());
-            deleteStmt.setInt(2, role.getRoleId());
-            deleteStmt.executeUpdate();
-
+            userDAO.removeRoleFromUser(selected.getUserId(), role.getRoleId());
             errorLabel.setText("");
             loadUsers();
             usersTable.refresh();

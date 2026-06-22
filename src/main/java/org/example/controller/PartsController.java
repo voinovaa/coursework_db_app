@@ -8,12 +8,9 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
-import org.example.database.DatabaseConnection;
 import org.example.model.Part;
-
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import org.example.model.interfaces.IPartDAO;
+import org.example.model.DAO.PartDAO;
 
 public class PartsController {
 
@@ -26,6 +23,7 @@ public class PartsController {
     @FXML private Label errorLabel;
 
     private ObservableList<Part> partsList = FXCollections.observableArrayList();
+    private final IPartDAO partDAO = new PartDAO();
 
     @FXML
     public void initialize() {
@@ -44,21 +42,8 @@ public class PartsController {
     }
 
     private void loadParts() {
-        partsList.clear();
-        try {
-            Connection conn = DatabaseConnection.getConnection();
-            ResultSet rs = conn.createStatement().executeQuery("SELECT * FROM parts");
-            while (rs.next()) {
-                partsList.add(new Part(
-                        rs.getInt("part_id"),
-                        rs.getString("name"),
-                        rs.getString("article")
-                ));
-            }
-            partsTable.setItems(partsList);
-        } catch (Exception e) {
-            errorLabel.setText(e.getMessage());
-        }
+        partsList.setAll(partDAO.getAllParts());
+        partsTable.setItems(partsList);
     }
 
     @FXML
@@ -72,15 +57,7 @@ public class PartsController {
         }
 
         try {
-
-
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "INSERT INTO parts (name, article) VALUES (?, ?)"
-            );
-            stmt.setString(1, name);
-            stmt.setString(2, article);
-            stmt.executeUpdate();
+            partDAO.addPart(name, article);
             clearFields();
             loadParts();
             errorLabel.setText("");
@@ -106,16 +83,7 @@ public class PartsController {
         }
 
         try {
-
-
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "UPDATE parts SET name = ?, article = ? WHERE part_id = ?"
-            );
-            stmt.setString(1, name);
-            stmt.setString(2, article);
-            stmt.setInt(3, selected.getPartId());
-            stmt.executeUpdate();
+            partDAO.updatePart(selected.getPartId(), name, article);
             clearFields();
             loadParts();
             errorLabel.setText("");
@@ -133,12 +101,7 @@ public class PartsController {
         }
 
         try {
-            Connection conn = DatabaseConnection.getConnection();
-            PreparedStatement stmt = conn.prepareStatement(
-                    "DELETE FROM parts WHERE part_id = ?"
-            );
-            stmt.setInt(1, selected.getPartId());
-            stmt.executeUpdate();
+            partDAO.deletePart(selected.getPartId());
             clearFields();
             loadParts();
         } catch (Exception e) {
