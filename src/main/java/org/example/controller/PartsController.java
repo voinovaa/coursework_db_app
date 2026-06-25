@@ -24,6 +24,16 @@ public class PartsController {
 
     private ObservableList<Part> partsList = FXCollections.observableArrayList();
     private final IPartDAO partDAO = new PartDAO();
+    private int currentUserId;
+    private String roleName;
+
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
     @FXML
     public void initialize() {
@@ -115,6 +125,9 @@ public class PartsController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Stage stage = (Stage) partsTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            MainController controller = loader.getController();
+            controller.setUser(currentUserId, "");
+            controller.setRole(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }

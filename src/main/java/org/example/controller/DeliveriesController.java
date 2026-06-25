@@ -20,16 +20,34 @@ import java.util.Map;
 
 public class DeliveriesController {
 
-    @FXML private TableView<Delivery> deliveriesTable;
-    @FXML private TableColumn<Delivery, Integer> idColumn;
-    @FXML private TableColumn<Delivery, String> supplierColumn;
-    @FXML private TableColumn<Delivery, LocalDate> dateColumn;
-    @FXML private TableColumn<Delivery, Integer> quantityColumn;
-    @FXML private ComboBox<Supplier> supplierCombo;
-    @FXML private DatePicker datePicker;
-    @FXML private TextField quantityField;
-    @FXML private Label errorLabel;
+    @FXML
+    private TableView<Delivery> deliveriesTable;
+    @FXML
+    private TableColumn<Delivery, Integer> idColumn;
+    @FXML
+    private TableColumn<Delivery, String> supplierColumn;
+    @FXML
+    private TableColumn<Delivery, LocalDate> dateColumn;
+    @FXML
+    private TableColumn<Delivery, Integer> quantityColumn;
+    @FXML
+    private ComboBox<Supplier> supplierCombo;
+    @FXML
+    private DatePicker datePicker;
+    @FXML
+    private TextField quantityField;
+    @FXML
+    private Label errorLabel;
     private int currentUserId;
+    private String roleName;
+
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
     private ObservableList<Delivery> deliveriesList = FXCollections.observableArrayList();
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
@@ -149,12 +167,11 @@ public class DeliveriesController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Stage stage = (Stage) deliveriesTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            MainController controller = loader.getController();
+            controller.setUser(currentUserId, "");
+            controller.setRole(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }
-    }
-
-    public void setCurrentUserId(int userId) {
-        this.currentUserId = userId;
     }
 }

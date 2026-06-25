@@ -26,6 +26,16 @@ public class SuppliersController {
 
     private ObservableList<Supplier> suppliersList = FXCollections.observableArrayList();
     private final ISupplierDAO supplierDAO = new SupplierDAO();
+    private int currentUserId;
+    private String roleName;
+
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
     @FXML
     public void initialize() {
@@ -120,6 +130,9 @@ public class SuppliersController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Stage stage = (Stage) suppliersTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            MainController controller = loader.getController();
+            controller.setUser(currentUserId, "");
+            controller.setRole(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }

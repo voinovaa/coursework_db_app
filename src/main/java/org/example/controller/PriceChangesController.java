@@ -40,7 +40,16 @@ public class PriceChangesController {
     private Map<Integer, String> partNameMap = new HashMap<>();
     private Map<Integer, String> supplierNameMap = new HashMap<>();
     private final IPriceChangeDAO priceChangeDAO = new PriceChangeDAO();
+    private int currentUserId;
+    private String roleName;
 
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
     @FXML
     public void initialize() {
         idColumn.setCellValueFactory(new PropertyValueFactory<>("changeId"));
@@ -154,10 +163,12 @@ public class PriceChangesController {
                 errorLabel.setText("Цена не может быть отрицательной");
                 return;
             }
+
             if (priceChangeDAO.priceChangeExists(part.getPartId(), supplier.getSupplierId(), date)) {
                 errorLabel.setText("Запись на эту дату уже существует");
                 return;
             }
+
             priceChangeDAO.addPriceChange(part.getPartId(), supplier.getSupplierId(), date, value);
             clearFields();
             loadPriceChanges();
@@ -198,6 +209,9 @@ public class PriceChangesController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Stage stage = (Stage) priceChangesTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            MainController controller = loader.getController();
+            controller.setUser(currentUserId, "");
+            controller.setRole(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }

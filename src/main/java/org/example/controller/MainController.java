@@ -5,6 +5,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.Stage;
+import org.example.model.Supplier;
 
 public class MainController {
 
@@ -13,6 +14,7 @@ public class MainController {
 
     private int userId;
     private String login;
+    private String roleName;
 
     public void setRole(String roleName) {
         if (!roleName.equals("Администратор")) {
@@ -32,6 +34,9 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/suppliers.fxml"));
             Stage stage = (Stage) suppliersButton.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            SuppliersController controller = loader.getController();
+            controller.setCurrentUserId(userId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -43,6 +48,9 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/parts.fxml"));
             Stage stage = (Stage) suppliersButton.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            PartsController controller = loader.getController();
+            controller.setCurrentUserId(userId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -56,6 +64,7 @@ public class MainController {
             stage.setScene(new Scene(loader.load()));
             DeliveriesController controller = loader.getController();
             controller.setCurrentUserId(userId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -67,6 +76,9 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/price_changes.fxml"));
             Stage stage = (Stage) suppliersButton.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            PriceChangesController controller = loader.getController();
+            controller.setCurrentUserId(userId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -78,6 +90,9 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/users.fxml"));
             Stage stage = (Stage) suppliersButton.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            UsersController controller = loader.getController();
+            controller.setCurrentUserId(userId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -94,4 +109,6 @@ public class MainController {
             e.printStackTrace();
         }
     }
+
+
 }

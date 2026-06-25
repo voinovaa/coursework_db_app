@@ -30,7 +30,16 @@ public class UsersController {
 
     private final IUserDAO userDAO = new UserDAO();
     private final IRoleDAO roleDAO = new RoleDAO();
+    private int currentUserId;
+    private String roleName;
 
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
     @FXML
     public void initialize() {
@@ -144,6 +153,9 @@ public class UsersController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
             Stage stage = (Stage) usersTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            MainController controller = loader.getController();
+            controller.setUser(currentUserId, "");
+            controller.setRole(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }

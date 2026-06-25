@@ -33,6 +33,16 @@ public class DeliveryPartsController {
     private ObservableList<Part> partsList = FXCollections.observableArrayList();
     private Map<Integer, String> partNameMap = new HashMap<>();
     private final IDeliveryPartDAO deliveryPartDAO = new DeliveryPartDAO();
+    private int currentUserId;
+    private String roleName;
+
+    public void setCurrentUserId(int userId) {
+        this.currentUserId = userId;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 
     @FXML
     public void initialize() {
@@ -156,6 +166,9 @@ public class DeliveryPartsController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/deliveries.fxml"));
             Stage stage = (Stage) partsTable.getScene().getWindow();
             stage.setScene(new Scene(loader.load()));
+            DeliveriesController controller = loader.getController();
+            controller.setCurrentUserId(currentUserId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }
