@@ -156,10 +156,13 @@ public class DeliveriesController {
             stage.setScene(new Scene(loader.load()));
             DeliveryPartsController controller = loader.getController();
             controller.setDelivery(selected);
+            controller.setCurrentUserId(currentUserId);
+            controller.setRoleName(roleName);
         } catch (Exception e) {
             errorLabel.setText(e.getMessage());
         }
     }
+
 
     @FXML
     private void handleBack() {
