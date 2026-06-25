@@ -17,6 +17,7 @@ public class MainController {
     private String roleName;
 
     public void setRole(String roleName) {
+        this.roleName = roleName;
         if (!roleName.equals("Администратор")) {
             usersButton.setVisible(false);
             usersButton.setManaged(false);

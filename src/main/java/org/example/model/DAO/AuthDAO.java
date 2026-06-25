@@ -23,7 +23,9 @@ public class AuthDAO implements IAuthDAO {
                                     "FROM users u " +
                                     "JOIN user_roles ur ON u.user_id = ur.user_id " +
                                     "JOIN roles r ON ur.role_id = r.role_id " +
-                                    "WHERE u.login = ?");
+                                    "WHERE u.login = ? " +
+                                    "ORDER BY r.role_id ASC " +
+                                    "LIMIT 1");
             stmt.setString(1, login);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
